@@ -1,4 +1,5 @@
 import datetime
+import time
 
 
 class Note:
@@ -9,14 +10,42 @@ class Note:
         self.updated_at = datetime.datetime.now()
 
 
-note1 = Note("Exam", "Study Math")
-note2 = Note("Final Exam", "Study Computer")
+def add_note(title, content):
+    new_note = Note(title, content)
+    notes.append(new_note)
 
-print(note1.title)
-print(note1.content)
-print(f"Waktu dibuat: {note1.created_at}")
-print(f"Waktu update: {note1.updated_at}")
-print(note2.title)
-print(note2.content)
-print(f"Waktu dibuat: {note2.created_at}")
-print(f"Waktu update: {note2.updated_at}")
+
+def get_notes():
+    return notes
+
+
+def update_note(title, new_content):
+    for note in notes:
+        if note.title == title:
+            note.content = new_content
+            note.updated_at = datetime.datetime.now()
+
+
+def delete_note(title):
+    for note in notes:
+        if note.title == title:
+            notes.remove(note)
+
+
+notes = []
+
+add_note("Math", "Geometry")
+add_note("Computer", "Python")
+
+time.sleep(2)
+
+update_note("Math", "Algebra")
+update_note("Computer", "AI")
+
+delete_note("Computer")
+result = get_notes()
+
+for note in result:
+    print(note.title + note.content)
+    print(f"Waktu dibuat: {note.created_at}")
+    print(f"Waktu update: {note.updated_at}")

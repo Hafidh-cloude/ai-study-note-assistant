@@ -1,32 +1,21 @@
-# Phase 2 - SQLite CRUD
+# Phase 2: SQLite CRUD
 
-Progress hari ini: Database & Table, INSERT, add_note(), SELECT,
-get_notes()
+## Tujuan
 
-## 1. SQLite & Koneksi Database
+Mengganti penyimpanan data dari Python list pada Phase 1 menjadi database SQLite dan mengimplementasikan CRUD menggunakan SQL secara langsung tanpa ORM.
 
+### 1. Koneksi SQLite
 ```
 import sqlite3
 
 connection = sqlite3.connect("notes.db")
 cursor = connection.cursor()
 ```
+connection = koneksi ke database.
+cursor = digunakan untuk menjalankan SQL.
+sqlite3.connect() membuka koneksi dan dapat membuat notes.db jika belum ada.
 
-Pemahaman: - sqlite3.connect() → membuka atau membuat database
-SQLite. - connection → koneksi ke database. - connection.cursor() →
-membuat cursor untuk menjalankan SQL. - cursor.execute() → menjalankan
-perintah SQL.
-
-### Struktur:
-
-ai-study-notes-assistant/
-├── app/
-│   └── database/
-│       └── database.py
-├── notes.db
-└── ...
-
-## 2. Membuat Tabel notes
+### 2. Membuat Tabel
 ```
 CREATE TABLE IF NOT EXISTS notes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,86 +25,40 @@ CREATE TABLE IF NOT EXISTS notes (
     updated_at TEXT
 );
 ```
-
-Pemahaman: - id → identitas setiap row. - PRIMARY KEY → identitas
-utama. - AUTOINCREMENT → SQLite memberikan ID otomatis. - title dan
-content → data note. - created_at dan updated_at → waktu note.
-
-
-## 3. INSERT --- Memasukkan Data
-
-Dipahami bahwa Python dan SQL adalah dua bahasa berbeda. Ekspresi
-Python di dalam string SQL tidak otomatis dieksekusi sebagai Python.
-
-Timestamp dibuat terlebih dahulu:
+Kolom:
 ```
-created_at = str(datetime.datetime.now())
-updated_at = str(datetime.datetime.now())
+id → ID unik otomatis.
+title → judul.
+content → isi.
+created_at → waktu dibuat.
+updated_at → waktu diperbarui.
 ```
-Kemudian digunakan dengan placeholder:
+### 3. INSERT — Create
 ```
-VALUES (?, ?, ?, ?)
-```
-Setelah INSERT, perubahan disimpan dengan:
-```
+cursor.execute(
+    "INSERT INTO notes(title, content, created_at, updated_at) "
+    "VALUES(?, ?, ?, ?)",
+    (title, content, created_at, updated_at),
+)
+
 connection.commit()
 ```
-execute() menjalankan operasi SQL, sedangkan commit() menyimpan
-perubahan data.
+? adalah placeholder parameter. Nilai diberikan terpisah dari SQL.
 
-## 4. Fungsi add_note()
+commit() menyimpan perubahan transaksi ke database dan digunakan setelah INSERT, UPDATE, atau DELETE.
+
+### 4. SELECT — Read
 ```
-def add_note(title, content):
-
-    created_at = str(datetime.datetime.now())
-    updated_at = str(datetime.datetime.now())
-
-    cursor.execute(
-        """
-        INSERT INTO notes(title, content, created_at, updated_at)
-        VALUES(?, ?, ?, ?)
-        """,
-        (
-            title,
-            content,
-            created_at,
-            updated_at,
-        ),
-    )
-
-    connection.commit()
-``` 
-Alur:
-
-add_note()
-    ↓
-buat timestamp
-    ↓
-INSERT ke SQLite
-    ↓
-commit()
-
-Fungsi sudah diuji dan data berhasil masuk ke database.
-
-## 5. SELECT --- Mengambil Data
-```
-result = cursor.execute("""
-    SELECT * FROM notes
-""")
-
+result = cursor.execute("SELECT * FROM notes")
 rows = result.fetchall()
 ```
+fetchall() mengambil seluruh hasil query.
 
-Pemahaman: - execute() → menjalankan query. - fetchall() → mengambil
-seluruh hasil query. - rows → kumpulan seluruh row. - row → satu
-row.
-
-## 6. Memproses Setiap Row
+Jika row:
 ```
-for row in rows:
-    print(row)
+(3, "Python", "Belajar function", "tanggal1", "tanggal2")
 ```
-Setiap nilai dapat diakses menggunakan index:
+maka:
 ```
 row[0] → id
 row[1] → title
@@ -123,102 +66,119 @@ row[2] → content
 row[3] → created_at
 row[4] → updated_at
 ```
-Contoh:
-```
-row = (5, "Python", "Belajar function", "tanggal", "tanggal")
+rows = kumpulan seluruh baris, sedangkan row = satu baris.
 
-print(row[1])
-print(row[2])
-```
-Hasil:
-```
-Python
-Belajar function
-```
-## 7. Fungsi get_notes()
+### 5. get_notes()
 ```
 def get_notes():
-    result = cursor.execute("""
-        SELECT * FROM notes
-    """)
-
+    result = cursor.execute("SELECT * FROM notes")
     rows = result.fetchall()
     return rows
 ```
-Penggunaan:
-```
-rows = get_notes()
+Phase 1 mengambil data dari list Python. Phase 2 mengambil data dari database menggunakan SQL.
 
-for row in rows:
-    print(row)
+### 6. add_note()
 ```
-Alur:
+def add_note(title, content):
+    created_at = str(datetime.datetime.now())
+    updated_at = str(datetime.datetime.now())
+
+    cursor.execute(
+        "INSERT INTO notes(title, content, created_at, updated_at) "
+        "VALUES(?, ?, ?, ?)",
+        (title, content, created_at, updated_at),
+    )
+    connection.commit()
 ```
-get_notes()
+Belum ada validasi judul duplikat, sehingga title yang sama dapat dibuat lebih dari sekali.
+
+### 7. UPDATE
+```
+def update_note(title, new_content):
+    updated_at = str(datetime.datetime.now())
+
+    cursor.execute(
+        "UPDATE notes "
+        "SET content = ?, updated_at = ? "
+        "WHERE title = ?",
+        (new_content, updated_at, title),
+    )
+    connection.commit()
+```
+WHERE menentukan baris yang terkena UPDATE. Tanpa WHERE, seluruh baris dapat diperbarui.
+
+Saat note di-update:
+```
+content berubah.
+
+updated_at berubah.
+
+created_at tetap.
+```
+### 8. DELETE
+```
+def delete_note(title):
+    cursor.execute(
+        "DELETE FROM notes WHERE title = ?",
+        (title,),
+    )
+    connection.commit()
+```
+Detail Python penting:
+```
+(title)     # bukan tuple
+(title,)    # tuple satu elemen
+```
+Koma membuatnya menjadi tuple.
+
+Jika beberapa row memiliki title yang sama, implementasi saat ini akan menghapus semua row yang memenuhi WHERE title = ?.
+
+### 9. Pola CRUD SQLite
+```
+Function
     ↓
-execute SELECT
+cursor.execute(SQL, parameters)
     ↓
-fetchall()
-    ↓
-rows
-    ↓
-return rows
+connection.commit()  ← untuk perubahan data
 ```
-Konsepnya sama dengan get_notes() pada Phase 1, tetapi sekarang sumber
-data adalah SQLite, bukan list Python.
+```
+Create → INSERT
+Read   → SELECT
+Update → UPDATE
+Delete → DELETE
+```
+### 10. Phase 1 vs Phase 2
 
-## 8. Perbedaan Phase 1 dan Phase 2
+**Phase 1**
+```
+notes.append(new_note)
+```
+Data disimpan di memory Python dan hilang ketika program berhenti.
 
-Phase 1
+**Phase 2**
 ```
-Python
-   ↓
-List
-   ↓
-Note Object
+cursor.execute(...)
+connection.commit()
 ```
-Phase 2
-```
-Python
-   ↓
-SQL
-   ↓
-SQLite
-   ↓
-Row
-```
-Konsep penting:
-```
-rows → kumpulan row
-row  → satu row
-row[index] → nilai dalam row
-```
-## 9. SELECT * vs Kolom Spesifik
+Data disimpan di notes.db sehingga dapat digunakan kembali.
 
-Untuk latihan digunakan:
+Perubahan konsep:
 ```
-SELECT * FROM notes;
+Phase 1 → Python List → Object di memory
+Phase 2 → SQLite      → Row di database
 ```
-Jika hanya membutuhkan title dan content:
-```
-SELECT title, content FROM notes;
-```
-Prinsip:
+### 11. Status
 
-SQL menentukan data apa yang diambil; Python menentukan bagaimana
-data hasil query diproses.
+✅ Database connection
+✅ Membuat table
+✅ INSERT
+✅ SELECT
+✅ UPDATE
+✅ DELETE
+✅ CRUD SQLite
+✅ commit()
+✅ Parameterized query
+✅ rows dan row
+✅ WHERE
 
-## 10. Duplicate Note
-
-Jika menjalankan:
-```
-add_note("Math", "Algebra")
-add_note("Math", "Algebra")
-```
-maka saat ini akan dibuat dua row berbeda.
-
-Alasannya: - Belum ada validasi duplicate title. - title belum dibuat
-UNIQUE. - SQLite memberikan id berbeda untuk setiap row.
-
-Untuk scope proyek saat ini, validasi duplicate title belum ditambahkan
-agar tidak menambah kompleksitas sebelum diperlukan.
+#### Phase 2 — SQLite CRUD: ***SELESAI***

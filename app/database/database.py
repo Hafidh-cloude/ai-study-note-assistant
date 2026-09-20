@@ -51,7 +51,37 @@ def get_note():
     return rows
 
 
-add_note("Python", "Belajar Function")
+def update_note(title, new_content):
+    updated_at = str(datetime.datetime.now())
+    cursor.execute(
+        """
+    UPDATE notes
+    SET content = ?, updated_at = ?
+    WHERE title = ?
+    """,
+        (
+            new_content,
+            updated_at,
+            title,
+        ),
+    )
+    connection.commit()
+
+
+def delete_note(title):
+    cursor.execute(
+        """
+        DELETE FROM notes
+        WHERE title = ?
+    """,
+        (title,),
+    )
+    connection.commit()
+
+
+# add_note("Informatics", "Artificial Intelligence")
+# update_note("Math", "Algebra")
+delete_note("Biologsy")
 rows = get_note()
 
 for row in rows:

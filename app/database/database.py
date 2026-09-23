@@ -1,7 +1,7 @@
 import sqlite3
 import datetime
 
-connection = sqlite3.connect("notes.db")
+connection = sqlite3.connect("notes.db", check_same_thread=False)
 
 cursor = connection.cursor()
 
@@ -42,7 +42,7 @@ def add_note(title, content):
 #     print(row[2])
 
 
-def get_note():
+def get_notes():
     result = cursor.execute("""
     SELECT * FROM notes
     """)
@@ -51,38 +51,40 @@ def get_note():
     return rows
 
 
-def update_note(title, new_content):
+def update_note(note_id, new_content):
     updated_at = str(datetime.datetime.now())
     cursor.execute(
         """
     UPDATE notes
     SET content = ?, updated_at = ?
-    WHERE title = ?
+    WHERE id = ?
     """,
         (
             new_content,
             updated_at,
-            title,
+            note_id,
         ),
     )
     connection.commit()
+    return cursor.rowcount
 
 
-def delete_note(title):
+def delete_note(note_id):
     cursor.execute(
         """
         DELETE FROM notes
-        WHERE title = ?
+        WHERE id = ?
     """,
-        (title,),
+        (note_id,),
     )
     connection.commit()
+    return cursor.rowcount
 
 
 # add_note("Informatics", "Artificial Intelligence")
 # update_note("Math", "Algebra")
 delete_note("Biologsy")
-rows = get_note()
+rows = get_notes()
 
-for row in rows:
-    print(row)
+# for row in rows:
+#     print(row)

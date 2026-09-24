@@ -27,3 +27,12 @@ response = requests.put(
 )
 assert response.status_code == 200
 print("PUT/notes/{id} berhasil")
+# Test POST Qwen
+response = requests.post(
+    "http://127.0.0.1:8000/ai/test",
+    json={
+        "prompt": "Jelaskan satu kalimat mengenai Python",
+    },
+)
+assert "answer" in response.json()
+print(response.json())

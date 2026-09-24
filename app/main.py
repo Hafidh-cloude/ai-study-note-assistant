@@ -6,6 +6,7 @@ from app.services.note_service import (
     create_note_service,
     update_note_service,
 )
+from app.services.ai_service import ask_ai
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -18,6 +19,10 @@ class NoteCreate(BaseModel):
 
 class NoteUpdate(BaseModel):
     content: str
+
+
+class Prompt(BaseModel):
+    prompt: str
 
 
 # @app.get("/")
@@ -63,3 +68,16 @@ def delete_note_endpoint(note_id: int):
         "message": "Berhasil Dihapus!",
         "note_id": note_id,
     }
+
+
+@app.post("/ai/test")
+def post_ai_endpoint(prompt: Prompt):
+    try:
+        return {
+            "answer": ask_ai(prompt.prompt),
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )

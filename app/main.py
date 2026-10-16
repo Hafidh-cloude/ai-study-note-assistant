@@ -4,9 +4,11 @@ from app.services.note_service import (
     delete_note_service,
     get_notes_service,
     create_note_service,
+    summary_note_service,
     update_note_service,
 )
 from app.services.ai_service import ask_ai
+from app.services.note_service import ask_note_service
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -23,6 +25,10 @@ class NoteUpdate(BaseModel):
 
 class Prompt(BaseModel):
     prompt: str
+
+
+class NoteQuestion(BaseModel):
+    question: str
 
 
 # @app.get("/")
@@ -81,3 +87,58 @@ def post_ai_endpoint(prompt: Prompt):
             status_code=500,
             detail=str(e),
         )
+
+
+# @app.get("/test/ask-note")
+# def test_ask_note():
+#     return {
+#         "prompt": ask_note_service(
+#             1,
+#             "Apa isi catatan tersebut?",
+#         )
+#     }
+
+
+@app.post("/notes/{note_id}/ask")
+def ask_note_endpoint(note_id: int, note: NoteQuestion):
+    try:
+        answer = ask_note_service(note_id, note.question)
+
+        if not answer:
+            raise HTTPException(
+                status_code=404,
+                detail="ID tidak ditemukan",
+            )
+
+        return {
+            "answer": answer,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+
+
+@app.post("/notes/{note_id}/summary")
+def summary_note_endpoint(note_id: int):
+    try:
+        summary = summary_note_service(note_id)
+
+        if not summary:
+            raise HTTPException(
+                status_code=404,
+                detail="ID tidak ditemukan",
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=str(e),
+        )
+    return {
+        "summary": summary,
+    }

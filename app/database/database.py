@@ -36,12 +36,6 @@ def add_note(title, content):
     connection.commit()
 
 
-# for row in rows:
-#     print(row[0])
-#     print(row[1])
-#     print(row[2])
-
-
 def get_notes():
     result = cursor.execute("""
     SELECT * FROM notes
@@ -81,10 +75,22 @@ def delete_note(note_id):
     return cursor.rowcount
 
 
+def get_note_by_id(note_id):
+    cursor.execute(
+        """
+    SELECT * FROM notes
+    WHERE id = ?
+    """,
+        (note_id,),
+    )
+    return cursor.fetchone()
+
+
+# print(get_note_by_id(1))
 # add_note("Informatics", "Artificial Intelligence")
 # update_note("Math", "Algebra")
-delete_note("Biologsy")
-rows = get_notes()
+# delete_note("Biologsy")
+# rows = get_notes()
 
 # for row in rows:
 #     print(row)

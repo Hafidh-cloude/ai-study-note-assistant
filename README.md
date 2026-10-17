@@ -103,7 +103,7 @@ Pastikan perangkat sudah memiliki:
 ### 1. Clone Repository
 
 ```bash
-git clone <YOUR_REPOSITORY_URL>
+git clone https://github.com/Hafidh-cloude/ai-study-note-assistant.git
 cd ai-study-notes-assistant
 ```
 
